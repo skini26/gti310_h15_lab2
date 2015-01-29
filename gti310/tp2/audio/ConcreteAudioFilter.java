@@ -1,6 +1,7 @@
 package gti310.tp2.audio;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import gti310.tp2.io.FileSink;
 import gti310.tp2.io.FileSource;
@@ -17,6 +18,7 @@ public class ConcreteAudioFilter implements AudioFilter {
 	private int numberOfChannels;
 	private int sampleRate;
 	private int bitsPerSample;
+	private int dataSize;
 	
 	public static final int WAVE_HEADER_SIZE = 44;
 	public static final String FILE_FORMAT = "WAVE";
@@ -29,11 +31,12 @@ public class ConcreteAudioFilter implements AudioFilter {
 		this.delai = delai;
 		this.facteurAttenuation = facteurAttenuation;
 		
-		checkHeader(input);
+		checkHeader();
+		process();
 		
 	}
 	
-	public void checkHeader(FileSource input) throws Exception{
+	public void checkHeader() throws Exception{
 		
 		// http://www.topherlee.com/software/pcm-tut-wavformat.html
 		
@@ -73,13 +76,46 @@ public class ConcreteAudioFilter implements AudioFilter {
 			throw new Exception("Bits per sample = "+bitsPerSample);
 		}
 		
+		//check data size : 41-44
+		dataSize = ((header[41])<< 24) | ((header[42] & 0xFF) << 16) | 
+			     ((header[43] & 0xFF) << 8) | ((header[44] & 0xFF)<< 0);
+		
+		
 		//
 		
 	}
 	
 	@Override
 	public void process() {
-		// TODO Auto-generated method stub
+		byte[] data = input.pop(dataSize);
+		
+		//convert byte array to Byte List
+		ArrayList<Byte> dataByteList = new ArrayList<Byte>();
+		Byte[] dataByteObjects = new Byte[data.length];
+	    for (int i = 0; i < data.length; i++) {
+	        dataByteObjects[i] = new Byte(data[i]);
+	    }
+	   
+	    //
+		
+		int bytePerSubSample = bitsPerSample/8;
+		int bytePerBigSample = numberOfChannels*bytePerSubSample; 
+		
+		
+		for(int i = 0; i<data.length; i+=bytePerBigSample){
+			
+			byte[] dataOut = new byte[bytePerBigSample];
+			
+			if(i<bytePerBigSample){
+				//dataOut = dataByteList.subList(i, bytePerBigSample).toArray();
+				output.push(dataOut);
+			}
+			
+			
+			
+			
+		}
+		
 
 	}
 
