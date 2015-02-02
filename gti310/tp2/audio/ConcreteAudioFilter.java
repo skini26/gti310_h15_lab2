@@ -1,5 +1,8 @@
 package gti310.tp2.audio;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -87,35 +90,58 @@ public class ConcreteAudioFilter implements AudioFilter {
 	
 	@Override
 	public void process() {
-		byte[] data = input.pop(dataSize);
-		
-		//convert byte array to Byte List
-		ArrayList<Byte> dataByteList = new ArrayList<Byte>();
-		Byte[] dataByteObjects = new Byte[data.length];
-	    for (int i = 0; i < data.length; i++) {
-	        dataByteObjects[i] = new Byte(data[i]);
-	    }
-	   
-	    //
-		
-		int bytePerSubSample = bitsPerSample/8;
-		int bytePerBigSample = numberOfChannels*bytePerSubSample; 
-		
-		
-		for(int i = 0; i<data.length; i+=bytePerBigSample){
+		try {
 			
-			byte[] dataOut = new byte[bytePerBigSample];
+			byte[] data = input.pop(dataSize);
+			ByteArrayInputStream dataIn = new ByteArrayInputStream(data);
 			
-			if(i<bytePerBigSample){
-				//dataOut = dataByteList.subList(i, bytePerBigSample).toArray();
-				output.push(dataOut);
+			int bytePerSubSample = bitsPerSample/8;
+			int bytePerBigSample = numberOfChannels*bytePerSubSample; 
+			ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
+			
+			for(int i = 0; i<data.length; i+=bytePerBigSample){
+				
+				dataIn.reset();
+				dataIn.skip(i);
+				
+				byte[] sample = new byte[bytePerBigSample];
+				dataIn.read(sample);
+				//dataOut.write(sample);
+				
+				if(i<bytePerBigSample){
+					output.push(sample);
+				}
+				else{
+					/*
+					 * L’effet d’écho à implémenter pour ce laboratoire consiste à répéter
+					 *  le signal d’origine, noté x, après un délai de M échantillons. 
+					 *  Le signal répété est atténué par un facteur a. 
+					 *  L’équation de cette effet correspond à :
+						y[n] = x[n] + a.x[n-M] (1)
+						Où y représente le signal de sortie et n, l’échantillon courant.
+					 */
+					byte[] outSample = new byte[bytePerBigSample]; //y
+					
+					//a.x[n-M]
+					int m = delai*bytePerBigSample;
+					
+					//x[n] == sample
+					
+					//x[n-m] == delayedSample
+					dataIn.reset();
+					dataIn.skip(i-m);
+					byte[] delayedSample = new byte[bytePerBigSample];
+					dataIn.read(delayedSample);
+					
+					sample+(facteurAttenuation*delayedSample);
+					
+				}
+				
 			}
-			
-			
-			
-			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
 
 	}
 
