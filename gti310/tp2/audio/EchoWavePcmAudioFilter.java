@@ -3,6 +3,8 @@ package gti310.tp2.audio;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -11,7 +13,7 @@ import gti310.tp2.io.FileSource;
 
 
 
-public class ConcreteAudioFilter implements AudioFilter {
+public class EchoWavePcmAudioFilter implements AudioFilter {
 
 	private FileSource input;
 	private FileSink output;
@@ -23,11 +25,14 @@ public class ConcreteAudioFilter implements AudioFilter {
 	private int bitsPerSample;
 	private int dataSize;
 	
+	//This filter doesn't change anything in the header
+	private byte[] header;
+	
 	public static final int WAVE_HEADER_SIZE = 44;
 	public static final String FILE_FORMAT = "WAVE";
 	public static final int FILE_TYPE = 1;
 	
-	public ConcreteAudioFilter(FileSource input, FileSink output, 
+	public EchoWavePcmAudioFilter(FileSource input, FileSink output, 
 								int delai, int facteurAttenuation) throws Exception{
 		this.input = input;
 		this.output = output;
@@ -35,7 +40,6 @@ public class ConcreteAudioFilter implements AudioFilter {
 		this.facteurAttenuation = facteurAttenuation;
 		
 		checkHeader();
-		process();
 		
 	}
 	
@@ -43,7 +47,7 @@ public class ConcreteAudioFilter implements AudioFilter {
 		
 		// http://www.topherlee.com/software/pcm-tut-wavformat.html
 		
-		byte[] header = input.pop(WAVE_HEADER_SIZE);
+		header = input.pop(WAVE_HEADER_SIZE);
 		
 		//check file format : 9-12
 		char[] fileFormat = new char[4];
@@ -88,25 +92,37 @@ public class ConcreteAudioFilter implements AudioFilter {
 		
 	}
 	
+	public void writeHeader(){
+		//Same header as input filem this filter doesn't change it.
+		output.push(header);
+	}
+	
 	@Override
 	public void process() {
 		try {
+			//Write header
+			writeHeader();
 			
+			//Get Audio Data and process it.
 			byte[] data = input.pop(dataSize);
 			ByteArrayInputStream dataIn = new ByteArrayInputStream(data);
 			
 			int bytePerSubSample = bitsPerSample/8;
 			int bytePerBigSample = numberOfChannels*bytePerSubSample; 
-			ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
 			
-			for(int i = 0; i<data.length; i+=bytePerBigSample){
+			//Sauter une ligne
+			System.out.println();
+			
+			for(int i = 0; i<data.length; i+=bytePerSubSample){
+				
+				//Progress bar
+				System.out.print("|");
 				
 				dataIn.reset();
 				dataIn.skip(i);
 				
-				byte[] sample = new byte[bytePerBigSample];
+				byte[] sample = new byte[bytePerSubSample];
 				dataIn.read(sample);
-				//dataOut.write(sample);
 				
 				if(i<bytePerBigSample){
 					output.push(sample);
@@ -120,7 +136,6 @@ public class ConcreteAudioFilter implements AudioFilter {
 						y[n] = x[n] + a.x[n-M] (1)
 						Où y représente le signal de sortie et n, l’échantillon courant.
 					 */
-					byte[] outSample = new byte[bytePerBigSample]; //y
 					
 					//a.x[n-M]
 					int m = delai*bytePerBigSample;
@@ -130,18 +145,40 @@ public class ConcreteAudioFilter implements AudioFilter {
 					//x[n-m] == delayedSample
 					dataIn.reset();
 					dataIn.skip(i-m);
-					byte[] delayedSample = new byte[bytePerBigSample];
+					byte[] delayedSample = new byte[bytePerSubSample];
 					dataIn.read(delayedSample);
 					
-					sample+(facteurAttenuation*delayedSample);
+					//y[n] = x[n] + a.x[n-M] = sample + facteurAttenuation*delayedSample
+					
+					//Transform byte array to int
+					ByteBuffer sampleByteBuffer = ByteBuffer.wrap(sample);
+					sampleByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+					int sampleInt = sampleByteBuffer.getInt();
+					
+					ByteBuffer delayedSampleByteBuffer = ByteBuffer.wrap(sample);
+					delayedSampleByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+					int delayedSampleInt = delayedSampleByteBuffer.getInt();
+					
+					//y[n] = x[n] + a.x[n-M] 
+					int outSampleInt = sampleInt + (facteurAttenuation*delayedSampleInt);
+					
+					//Convert to byte array
+					byte[] outSample = ByteBuffer.allocate(bytePerSubSample).putInt(outSampleInt).array();
+
+					//Write byte array on the file.
+					output.push(outSample);
 					
 				}
 				
 			}
-		} catch (IOException e) {
+			
+		} 
+		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		
 
 	}
 
