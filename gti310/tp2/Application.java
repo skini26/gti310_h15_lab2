@@ -17,11 +17,12 @@ public class Application {
 		System.out.println("Echo audio filter project!");
 		
 		String inputFileName = args[0];
-		String delaiString = args[1];
-		String facteurAttenuationString = args[2];
+		String outputFileName = args[1];
+		String delaiString = args[2];
+		String facteurAttenuationString = args[3];
 		
-		if(inputFileName != null && delaiString != null 
-					&& facteurAttenuationString != null){
+		if(inputFileName != null && outputFileName != null 
+				&& delaiString != null && facteurAttenuationString != null){
 			try {
 				
 				int delai = Integer.parseInt(delaiString);
@@ -30,10 +31,10 @@ public class Application {
 				System.out.println("Fichier : "+inputFileName);
 				System.out.println("Delai : "+delai);
 				System.out.println("Facteur d'attenuation : "+facteurAttenuation);
-				System.out.println("Fichier de sortie : "+inputFileName+"_Filtered");
+				System.out.println("Fichier de sortie : "+outputFileName);
 				
 				FileSource input = new FileSource(inputFileName);
-				FileSink output = new FileSink(inputFileName+"_Filtered");
+				FileSink output = new FileSink(outputFileName);
 				
 				EchoWavePcmAudioFilter filter = new EchoWavePcmAudioFilter
 							(input, output, delai, facteurAttenuation);
@@ -45,7 +46,7 @@ public class Application {
 			} catch (FileNotFoundException e) {
 				System.err.println(e.getMessage());
 			} catch (Exception e) {
-				System.err.println(e.getMessage());
+				e.printStackTrace();
 			}
 		}
 		

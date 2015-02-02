@@ -51,49 +51,56 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 		
 		//check file format : 9-12
 		char[] fileFormat = new char[4];
-		fileFormat[0] = (char) header[9];
-		fileFormat[1] = (char)header[10];
-		fileFormat[2] = (char)header[11];
-		fileFormat[3] = (char)header[12];
+		fileFormat[0] = (char) header[8];
+		fileFormat[1] = (char)header[9];
+		fileFormat[2] = (char)header[10];
+		fileFormat[3] = (char)header[11];
 		String fileFormatString = String.valueOf(fileFormat);
+		
+		System.out.println("File format : "+fileFormatString);
 		if(FILE_FORMAT.equals(fileFormatString) == false){
 			throw new Exception("File type is not "+FILE_FORMAT);
 		}
 		
+		
 		//check type (pcm = 1) : 21-22
 		
-		int type = ((header[21] & 0xFF) << 8) | ((header[22] & 0xFF)<< 0);
+		int type = ((header[21] & 0xFF) << 8) | ((header[20] & 0xFF)<< 0);
+		System.out.println("File type : "+type);
 		if(type != FILE_TYPE){
 			throw new Exception("File type is not "+FILE_TYPE);
 		}
 		
 		//check number of channels : 23-24
 		
-		numberOfChannels = ((header[23] & 0xFF) << 8) | ((header[24] & 0xFF)<< 0);
+		numberOfChannels = ((header[23] & 0xFF) << 8) | ((header[22] & 0xFF)<< 0);
+		System.out.println("Number of channels : "+numberOfChannels);
 		
 		//check sample rate : 25-28
 		
-		sampleRate = ((header[25])<< 24) | ((header[26] & 0xFF) << 16) | 
-				     ((header[27] & 0xFF) << 8) | ((header[28] & 0xFF)<< 0);
+		sampleRate = ((header[27])<< 24) | ((header[26] & 0xFF) << 16) | 
+				     ((header[25] & 0xFF) << 8) | ((header[24] & 0xFF)<< 0);
+		System.out.println("Sample rate : "+sampleRate);
 		
 		//check bits per sample : 35-36
 		
-		bitsPerSample = ((header[35] & 0xFF) << 8) | ((header[36] & 0xFF)<< 0);
+		bitsPerSample = ((header[35] & 0xFF) << 8) | ((header[34] & 0xFF)<< 0);
+		System.out.println("Bits per sample : "+bitsPerSample);
 		if(bitsPerSample != 8 && bitsPerSample != 16){
-			throw new Exception("Bits per sample = "+bitsPerSample);
+			throw new Exception("Bits per sample not OK = "+bitsPerSample);
 		}
 		
 		//check data size : 41-44
-		dataSize = ((header[41])<< 24) | ((header[42] & 0xFF) << 16) | 
-			     ((header[43] & 0xFF) << 8) | ((header[44] & 0xFF)<< 0);
-		
+		dataSize = ((header[43])<< 24) | ((header[42] & 0xFF) << 16) | 
+			     ((header[41] & 0xFF) << 8) | ((header[40] & 0xFF)<< 0);
+		System.out.println("Data size : "+dataSize/8+" bytes");
 		
 		//
 		
 	}
 	
 	public void writeHeader(){
-		//Same header as input filem this filter doesn't change it.
+		//Same header as input file this filter doesn't change it.
 		output.push(header);
 	}
 	
@@ -108,7 +115,9 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 			ByteArrayInputStream dataIn = new ByteArrayInputStream(data);
 			
 			int bytePerSubSample = bitsPerSample/8;
+			System.out.println("Bytes per sub sample : "+bytePerSubSample);
 			int bytePerBigSample = numberOfChannels*bytePerSubSample; 
+			System.out.println("Bytes per complete sample : "+bytePerBigSample);
 			
 			//Sauter une ligne
 			System.out.println();
@@ -116,7 +125,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 			for(int i = 0; i<data.length; i+=bytePerSubSample){
 				
 				//Progress bar
-				System.out.print("|");
+				System.out.print(".");
 				
 				dataIn.reset();
 				dataIn.skip(i);
@@ -153,17 +162,17 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 					//Transform byte array to int
 					ByteBuffer sampleByteBuffer = ByteBuffer.wrap(sample);
 					sampleByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-					int sampleInt = sampleByteBuffer.getInt();
+					int sampleInt = sampleByteBuffer.getShort();
 					
 					ByteBuffer delayedSampleByteBuffer = ByteBuffer.wrap(sample);
 					delayedSampleByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-					int delayedSampleInt = delayedSampleByteBuffer.getInt();
+					int delayedSampleInt = delayedSampleByteBuffer.getShort();
 					
 					//y[n] = x[n] + a.x[n-M] 
 					int outSampleInt = sampleInt + (facteurAttenuation*delayedSampleInt);
 					
 					//Convert to byte array
-					byte[] outSample = ByteBuffer.allocate(bytePerSubSample).putInt(outSampleInt).array();
+					byte[] outSample = ByteBuffer.allocate(bytePerSubSample).putShort((short) outSampleInt).array();
 
 					//Write byte array on the file.
 					output.push(outSample);
@@ -171,12 +180,14 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 				}
 				
 			}
-			
+			dataIn.close();
 		} 
+		
 		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		
 		
 
