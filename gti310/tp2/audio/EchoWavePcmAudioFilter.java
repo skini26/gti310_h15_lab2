@@ -24,6 +24,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 	private int sampleRate;
 	private int bitsPerSample;
 	private int dataSize;
+	private int bytesNbInOneMiliSecond;
 	
 	//This filter doesn't change anything in the header
 	private byte[] header;
@@ -83,7 +84,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 		sampleRate = ((header[27])<< 24) | ((header[26] & 0xFF) << 16) | 
 				     ((header[25] & 0xFF) << 8) | ((header[24] & 0xFF)<< 0);
 		System.out.println("Sample rate : "+sampleRate);
-		
+			
 		//check bits per sample : 35-36
 		
 		bitsPerSample = ((header[35] & 0xFF) << 8) | ((header[34] & 0xFF)<< 0);
@@ -99,6 +100,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 		
 		
 		//
+		bytesNbInOneMiliSecond = (sampleRate*bitsPerSample/8)/1000;
 		
 	}
 	
@@ -115,31 +117,18 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 			
 			byte[] data;
 			int bytesPerSubSample = bitsPerSample/8;
-			System.out.println("Bytes per sub sample : "+bytesPerSubSample);
 			int bytesPerBigSample = numberOfChannels*bytesPerSubSample; 
-			System.out.println("Bytes per complete sample : "+bytesPerBigSample);
-			//Sauter une ligne
-			System.out.println();
 			
-			//Get Audio Data by batches and process it.
+			//Get Audio Data by batches and process it until data == null.
 			do{
 				
 				data = input.pop(BATCH_SIZE);
 				ByteArrayInputStream dataIn = new ByteArrayInputStream(data);
 
-				
 				//Progress bar
 				System.out.print(".");
 				
 				for(int i = 0; i<data.length; i+=bytesPerSubSample){
-					
-					dataIn.reset();
-					dataIn.skip(i);
-					
-					byte[] sample = new byte[bytesPerSubSample];
-					dataIn.read(sample);
-					
-					
 					
 					/*
 					 * L’effet d’écho à implémenter pour ce laboratoire consiste à répéter
@@ -150,12 +139,17 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 						Où y représente le signal de sortie et n, l’échantillon courant.
 					 */
 					
-					//a.x[n-M]
-					int m = delai*bytesPerBigSample;
+					dataIn.reset();
+					dataIn.skip(i);
 					
 					//x[n] == sample
-					
-					//x[n-m] == delayedSample
+					byte[] sample = new byte[bytesPerSubSample];
+					dataIn.read(sample);
+	
+					//M
+					int m = delai*bytesNbInOneMiliSecond;
+
+					//x[n-M] == delayedSample
 					dataIn.reset();
 					int bytesDelay = i-m;
 					if(bytesDelay<0) { bytesDelay = 0; }
