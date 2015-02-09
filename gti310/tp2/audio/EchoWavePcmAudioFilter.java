@@ -131,6 +131,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 			byte[] data;
 			int bytesPerSubSample = bitsPerSample/8;
 			int bytesPerBigSample = numberOfChannels*bytesPerSubSample; 
+			int index = 0;
 			
 			
 			do{
@@ -162,11 +163,11 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 						dataIn.read(sample);
 		
 						//M
-						int m = delai;//*bytesNbInOneMiliSecond;
+						int m = delai*bytesPerBigSample;
 
 						//x[n-M] == delayedSample
 						dataIn.reset();
-						int bytesDelayIndex = i-m;
+						int bytesDelayIndex = index-m;
 						byte[] delayedSample = new byte[bytesPerSubSample];
 						//If there is something to "echo", get the delayed sample
 						if(bytesDelayIndex>=0) {  
@@ -178,10 +179,10 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 						
 						//Transform byte array to int
 						ByteBuffer sampleByteBuffer = ByteBuffer.wrap(sample);
-						sampleByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+						sampleByteBuffer.order(ByteOrder.BIG_ENDIAN);
 
 						ByteBuffer delayedSampleByteBuffer = ByteBuffer.wrap(delayedSample);
-						delayedSampleByteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+						delayedSampleByteBuffer.order(ByteOrder.BIG_ENDIAN);
 						
 						int sampleInt = 0;
 						int delayedSampleInt = 0;
@@ -194,7 +195,8 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 							case 1 : sampleInt = sampleByteBuffer.get();
 									 delayedSampleInt = delayedSampleByteBuffer.get();
 									 //y[n] = x[n] + a.x[n-M] 
-									 outSampleInt = sampleInt + (delayedSampleInt/facteurAttenuation);
+									 float outSampleFloat8Bits = (float)sampleInt + ((float)delayedSampleInt*((float)1/(float)facteurAttenuation));
+									 outSampleInt = (int) outSampleFloat8Bits;
 									//Convert to byte array
 									 outSample = ByteBuffer.allocate(bytesPerSubSample).put((byte) outSampleInt).array();
 									 break;
@@ -204,7 +206,8 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 							case 2 : sampleInt = sampleByteBuffer.getShort();
 									 delayedSampleInt = delayedSampleByteBuffer.getShort();
 									 //y[n] = x[n] + a.x[n-M] 
-									 outSampleInt = sampleInt + (delayedSampleInt/facteurAttenuation);
+									 float outSampleFloat16Bits = (float)sampleInt + ((float)delayedSampleInt*((float)1/(float)facteurAttenuation));
+									 outSampleInt = (int) outSampleFloat16Bits;
 									//Convert to byte array
 									 outSample = ByteBuffer.allocate(bytesPerSubSample).putShort((short) outSampleInt).array();
 									 break;
@@ -212,6 +215,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 						
 						 
 
+						index = index + bytesPerSubSample;
 						//Write byte array on the file.
 						output.push(outSample);
 						
@@ -231,7 +235,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 			e.printStackTrace();
 		}
 		
-		
+		output.close();
 		
 
 	}
