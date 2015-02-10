@@ -124,120 +124,95 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 	 */
 	@Override
 	public void process() {
-		try {
-			//Write header
-			writeHeader();
-			
-			byte[] data;
-			int bytesPerSubSample = bitsPerSample/8;
-			int bytesPerBigSample = numberOfChannels*bytesPerSubSample; 
-			int index = 0;
-			
-			
-			do{
-				//Get Audio Data by batches and process it until data == null.
-				data = input.pop(BATCH_SIZE);
-				
-				if(data != null){
-					ByteArrayInputStream dataIn = new ByteArrayInputStream(data);
-
-					//Progress bar
-					System.out.print(".");
-					
-					for(int i = 0; i<data.length; i+=bytesPerSubSample){
-						
-						/*
-						 * L’effet d’écho à implémenter pour ce laboratoire consiste à répéter
-						 *  le signal d’origine, noté x, après un délai de M échantillons. 
-						 *  Le signal répété est atténué par un facteur a. 
-						 *  L’équation de cette effet correspond à :
-							y[n] = x[n] + a.x[n-M] (1)
-							Où y représente le signal de sortie et n, l’échantillon courant.
-						 */
-						
-						dataIn.reset();
-						dataIn.skip(i);
-						
-						//x[n] == sample
-						byte[] sample = new byte[bytesPerSubSample];
-						dataIn.read(sample);
 		
-						//M
-						int m = delai*bytesPerBigSample;
-
-						//x[n-M] == delayedSample
-						dataIn.reset();
-						int bytesDelayIndex = index-m;
-						byte[] delayedSample = new byte[bytesPerSubSample];
-						//If there is something to "echo", get the delayed sample
-						if(bytesDelayIndex>=0) {  
-							dataIn.skip(bytesDelayIndex);
-							dataIn.read(delayedSample);
-						}
-							
-						//y[n] = x[n] + a.x[n-M] = sample + facteurAttenuation*delayedSample
-						
-						//Transform byte array to int
-						ByteBuffer sampleByteBuffer = ByteBuffer.wrap(sample);
-						sampleByteBuffer.order(ByteOrder.BIG_ENDIAN);
-
-						ByteBuffer delayedSampleByteBuffer = ByteBuffer.wrap(delayedSample);
-						delayedSampleByteBuffer.order(ByteOrder.BIG_ENDIAN);
-						
-						int sampleInt = 0;
-						int delayedSampleInt = 0;
-						int outSampleInt = 0;
-						byte[] outSample = null;
-						
-						switch(bytesPerSubSample){
-							
-							//8bits
-							case 1 : sampleInt = sampleByteBuffer.get();
-									 delayedSampleInt = delayedSampleByteBuffer.get();
-									 //y[n] = x[n] + a.x[n-M] 
-									 float outSampleFloat8Bits = (float)sampleInt + ((float)delayedSampleInt*((float)1/(float)facteurAttenuation));
-									 outSampleInt = (int) outSampleFloat8Bits;
-									//Convert to byte array
-									 outSample = ByteBuffer.allocate(bytesPerSubSample).put((byte) outSampleInt).array();
-									 break;
-							
-							
-							//16bits
-							case 2 : sampleInt = sampleByteBuffer.getShort();
-									 delayedSampleInt = delayedSampleByteBuffer.getShort();
-									 //y[n] = x[n] + a.x[n-M] 
-									 float outSampleFloat16Bits = (float)sampleInt + ((float)delayedSampleInt*((float)1/(float)facteurAttenuation));
-									 outSampleInt = (int) outSampleFloat16Bits;
-									//Convert to byte array
-									 outSample = ByteBuffer.allocate(bytesPerSubSample).putShort((short) outSampleInt).array();
-									 break;
-						}
-						
-						 
-
-						index = index + bytesPerSubSample;
-						//Write byte array on the file.
-						output.push(outSample);
-						
+		
+		//Write header
+		writeHeader();
+		
+		byte[] data;
+		int bytesPerSubSample = bitsPerSample/8;
+		int bytesPerBigSample = numberOfChannels*bytesPerSubSample; 
+		int index = 0;
+		
+		
+		do{
+			//Get Audio Data by batches and process it until data == null.
+			data = input.pop(BATCH_SIZE);
+			
+			if(data != null){
+				//Progress bar
+				System.out.print(".");
+				
+				for(int i = 0; i<data.length; i+=bytesPerSubSample){
 					
-						
+					/*
+					 * L’effet d’écho à implémenter pour ce laboratoire consiste à répéter
+					 *  le signal d’origine, noté x, après un délai de M échantillons. 
+					 *  Le signal répété est atténué par un facteur a. 
+					 *  L’équation de cette effet correspond à :
+						y[n] = x[n] + a.x[n-M] (1)
+						Où y représente le signal de sortie et n, l’échantillon courant.
+					 */
+					
+					//x[n] == sample
+					byte[] sample = Arrays.copyOfRange(data, i, i+bytesPerSubSample);
+					
+					
+					//x[n-M] == delayedSample
+					//M = number of samples behind
+					int m = delai*bytesPerBigSample;
+					int delayedSampleIndex = i-m;
+					byte[] delayedSample = new byte[bytesPerSubSample];
+					if(delayedSampleIndex>=0) {  
+						delayedSample = Arrays.copyOfRange(data, delayedSampleIndex, delayedSampleIndex+bytesPerSubSample);
 					}
-					dataIn.close();
-				}
+					//else delayedSample = [0,0]
+					
+					short sampleShort = 0;
+					short delayedSampleShort = 0;
+					short outSampleShort = 0;
+					byte[] outSample = null;
+					float a = 1.0f/(float)facteurAttenuation;
+					float delayedDecayedSample = 0.0f;
+					//y[n] = x[n] + a.x[n-M] = sample + facteurAttenuation*delayedSample
+					
+					switch(bytesPerSubSample){
+						//8bits
+						case 1 : sampleShort = ByteBuffer.wrap(sample).getShort();
+								 delayedSampleShort = ByteBuffer.wrap(delayedSample).getShort();
+								 //a.x[n-M] = delayedDecayedSample
+								 delayedDecayedSample = (float)delayedSampleShort*a;
+								 //y[n] = outSample...
+								 float outSampleFloat8Bits = (float)sampleShort + delayedDecayedSample;
+								 outSampleShort = (short) outSampleFloat8Bits;
+								//Convert to byte array
+								 outSample = ByteBuffer.allocate(bytesPerSubSample).put((byte) outSampleShort).array();
+								 break;
+						//16bits
+						case 2 : sampleShort = ByteBuffer.wrap(sample).getShort();
+								 delayedSampleShort = ByteBuffer.wrap(delayedSample).getShort();
+								 //y[n] = x[n] + a.x[n-M] 
+								 delayedDecayedSample = (float)delayedSampleShort*a;
+								 float outSampleFloat16Bits = (float)sampleShort + delayedDecayedSample;
+								 outSampleShort = (short) outSampleFloat16Bits;
+								//Convert to byte array
+								 outSample = ByteBuffer.allocate(bytesPerSubSample).putShort((short) outSampleShort).array();
+								 break;
+					}
 				
-			
-			}while(data != null); 
-		
-			
-		}
-		catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		output.close();
-		
+					index = index + bytesPerSubSample;
+					//Write byte array on the file.
+					output.push(outSample);
+					//System.out.println("i absolue="+index+" | i="+i+" | delay index="+delayedSampleIndex+" | sample="+sampleShort+" | delayedSample="+delayedSampleShort+" | outSample="+outSampleShort);
 
+				}
+			}
+			
+		
+		}while(data != null); 
+
+		output.close();
+	
 	}
 
 }
