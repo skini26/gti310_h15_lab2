@@ -17,8 +17,8 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 
 	private FileSource input;
 	private FileSink output;
-	private int delai;
-	private int facteurAttenuation;
+	private int delai; // in MS
+	private double facteurAttenuation;
 	
 	private int numberOfChannels;
 	private int sampleRate;
@@ -36,7 +36,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 	public static final int BATCH_SIZE = 1024; 
 	
 	public EchoWavePcmAudioFilter(FileSource input, FileSink output, 
-								int delai, int facteurAttenuation) throws Exception{
+								int delai, double facteurAttenuation) throws Exception{
 		this.input = input;
 		this.output = output;
 		this.delai = delai;
@@ -124,20 +124,17 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 	 */
 	@Override
 	public void process() {
-		
-		
+
 		//Write header
 		writeHeader();
 		
 		byte[] data;
 		int bytesPerSubSample = bitsPerSample/8;
 		int bytesPerBigSample = numberOfChannels*bytesPerSubSample; 
-		int index = 0;
-		
-		
+			
 		do{
 			//Get Audio Data by batches and process it until data == null.
-			data = input.pop(BATCH_SIZE);
+			data = input.pop(dataSize);
 			
 			if(data != null){
 				//Progress bar
@@ -160,7 +157,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 					
 					//x[n-M] == delayedSample
 					//M = number of samples behind
-					int m = delai*bytesPerBigSample;
+					int m = delai*(sampleRate/1000); //delay in ms
 					int delayedSampleIndex = i-m;
 					byte[] delayedSample = new byte[bytesPerSubSample];
 					if(delayedSampleIndex>=0) {  
@@ -172,35 +169,35 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 					short delayedSampleShort = 0;
 					short outSampleShort = 0;
 					byte[] outSample = null;
-					float a = 1.0f/(float)facteurAttenuation;
-					float delayedDecayedSample = 0.0f;
+					double a = 1.0/(double)facteurAttenuation;
+					double delayedDecayedSample = 0.0;
 					//y[n] = x[n] + a.x[n-M] = sample + facteurAttenuation*delayedSample
 					
 					switch(bytesPerSubSample){
 						//8bits
-						case 1 : sampleShort = ByteBuffer.wrap(sample).getShort();
-								 delayedSampleShort = ByteBuffer.wrap(delayedSample).getShort();
+						case 1 : sampleShort = ByteBuffer.wrap(sample).get();
+								 delayedSampleShort = ByteBuffer.wrap(delayedSample).get();
 								 //a.x[n-M] = delayedDecayedSample
-								 delayedDecayedSample = (float)delayedSampleShort*a;
+								 delayedDecayedSample = (double)delayedSampleShort*a;
 								 //y[n] = outSample...
-								 float outSampleFloat8Bits = (float)sampleShort + delayedDecayedSample;
-								 outSampleShort = (short) outSampleFloat8Bits;
+								 double outSampleDouble8Bits = (double)sampleShort + delayedDecayedSample;
+								 outSampleShort = (short) outSampleDouble8Bits;
 								//Convert to byte array
 								 outSample = ByteBuffer.allocate(bytesPerSubSample).put((byte) outSampleShort).array();
 								 break;
 						//16bits
 						case 2 : sampleShort = ByteBuffer.wrap(sample).getShort();
 								 delayedSampleShort = ByteBuffer.wrap(delayedSample).getShort();
-								 //y[n] = x[n] + a.x[n-M] 
-								 delayedDecayedSample = (float)delayedSampleShort*a;
-								 float outSampleFloat16Bits = (float)sampleShort + delayedDecayedSample;
-								 outSampleShort = (short) outSampleFloat16Bits;
+								//a.x[n-M] = delayedDecayedSample
+								 delayedDecayedSample = (double)delayedSampleShort*a;
+								 //y[n] = outSample...
+								 double outSampleDouble16Bits = (double)sampleShort + delayedDecayedSample;
+								 outSampleShort = (short) outSampleDouble16Bits;
 								//Convert to byte array
 								 outSample = ByteBuffer.allocate(bytesPerSubSample).putShort((short) outSampleShort).array();
 								 break;
 					}
 				
-					index = index + bytesPerSubSample;
 					//Write byte array on the file.
 					output.push(outSample);
 					//System.out.println("i absolue="+index+" | i="+i+" | delay index="+delayedSampleIndex+" | sample="+sampleShort+" | delayedSample="+delayedSampleShort+" | outSample="+outSampleShort);

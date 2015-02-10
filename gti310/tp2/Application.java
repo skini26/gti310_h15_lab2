@@ -30,7 +30,7 @@ public class Application {
 				
 				//Convert "delai" and "facteur" to int
 				int delai = Integer.parseInt(delaiString);
-				int facteurAttenuation = Integer.parseInt(facteurAttenuationString);
+				double facteurAttenuation = Double.parseDouble(facteurAttenuationString);
 				
 				//Display parameters
 				System.out.println("Fichier : "+inputFileName);
