@@ -34,6 +34,7 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 	public static final int FILE_TYPE = 1;
 	//Filter 1 MB at a time to not load the entire file in memory
 	public static final int BATCH_SIZE = 1024; 
+	public static final int MAX_CLIPPING = 32767; 
 	
 	public EchoWavePcmAudioFilter(FileSource input, FileSink output, 
 								int delai, double facteurAttenuation) throws Exception{
@@ -169,38 +170,56 @@ public class EchoWavePcmAudioFilter implements AudioFilter {
 					short delayedSampleShort = 0;
 					short outSampleShort = 0;
 					byte[] outSample = null;
-					double a = 1.0/(double)facteurAttenuation;
+					double a = facteurAttenuation;
 					double delayedDecayedSample = 0.0;
 					//y[n] = x[n] + a.x[n-M] = sample + facteurAttenuation*delayedSample
 					
 					switch(bytesPerSubSample){
 						//8bits
-						case 1 : sampleShort = ByteBuffer.wrap(sample).get();
-								 delayedSampleShort = ByteBuffer.wrap(delayedSample).get();
+						case 1 : int unsignedSample = ByteBuffer.wrap(sample).order(ByteOrder.LITTLE_ENDIAN).get() & 0xFF;;   
+								 int unsignedDelayedSample = ByteBuffer.wrap(delayedSample).order(ByteOrder.LITTLE_ENDIAN).get() & 0xFF;
 								 //a.x[n-M] = delayedDecayedSample
-								 delayedDecayedSample = (double)delayedSampleShort*a;
+								 delayedDecayedSample = (double)unsignedDelayedSample*a;
 								 //y[n] = outSample...
-								 double outSampleDouble8Bits = (double)sampleShort + delayedDecayedSample;
+								 double outSampleDouble8Bits = (double)unsignedSample + delayedDecayedSample;
+								
+								 //cliping
+								 if(outSampleDouble8Bits>MAX_CLIPPING){
+									 outSampleDouble8Bits = MAX_CLIPPING;
+								 }
+								 else if(outSampleDouble8Bits< -MAX_CLIPPING){
+									 outSampleDouble8Bits = -MAX_CLIPPING;
+								 }
+								 
 								 outSampleShort = (short) outSampleDouble8Bits;
 								//Convert to byte array
-								 outSample = ByteBuffer.allocate(bytesPerSubSample).put((byte) outSampleShort).array();
+								 outSample = ByteBuffer.allocate(bytesPerSubSample).order(ByteOrder.LITTLE_ENDIAN).put((byte) outSampleShort).array();
 								 break;
 						//16bits
-						case 2 : sampleShort = ByteBuffer.wrap(sample).getShort();
-								 delayedSampleShort = ByteBuffer.wrap(delayedSample).getShort();
+						case 2 : sampleShort = ByteBuffer.wrap(sample).order(ByteOrder.LITTLE_ENDIAN).getShort();
+								 delayedSampleShort = ByteBuffer.wrap(delayedSample).order(ByteOrder.LITTLE_ENDIAN).getShort();
 								//a.x[n-M] = delayedDecayedSample
 								 delayedDecayedSample = (double)delayedSampleShort*a;
 								 //y[n] = outSample...
 								 double outSampleDouble16Bits = (double)sampleShort + delayedDecayedSample;
+								 
+								 //cliping
+								 if(outSampleDouble16Bits>MAX_CLIPPING){
+									 outSampleDouble16Bits = MAX_CLIPPING;
+								 }
+								 else if(outSampleDouble16Bits< -MAX_CLIPPING){
+									 outSampleDouble16Bits = -MAX_CLIPPING;
+								 }
+								 
 								 outSampleShort = (short) outSampleDouble16Bits;
 								//Convert to byte array
-								 outSample = ByteBuffer.allocate(bytesPerSubSample).putShort((short) outSampleShort).array();
+								 outSample = ByteBuffer.allocate(bytesPerSubSample).order(ByteOrder.LITTLE_ENDIAN).putShort((short) outSampleShort).array();
 								 break;
 					}
 				
 					//Write byte array on the file.
 					output.push(outSample);
-					//System.out.println("i absolue="+index+" | i="+i+" | delay index="+delayedSampleIndex+" | sample="+sampleShort+" | delayedSample="+delayedSampleShort+" | outSample="+outSampleShort);
+					//System.out.println("i="+i+" | delay index="+delayedSampleIndex+" | sample="+sampleShort+" ["+sample[0]+","+sample[1]+"] | delayedSample="+delayedSampleShort+" | outSample="+outSampleShort+" ["+outSample[0]+","+outSample[1]+"]");
 
 				}
 			}
