@@ -1,5 +1,7 @@
 package gti310.tp3.parser;
 
+import java.io.FileNotFoundException;
+
 /**
  * The Parser interface defines the method through which an input file will be
  * interpreted and an output object will be returned. For greater flexibility,
@@ -28,6 +30,7 @@ public interface Parser<E> {
 	 * @param filename The complete path to the file to parse.
 	 * @return An object produced from the input file, or null if something
 	 * 		   went wrong.
+	 * @throws FileNotFoundException 
 	 */
-	E parse(String filename);
+	E parse(String filename) throws FileNotFoundException;
 }
