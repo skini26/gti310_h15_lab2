@@ -12,21 +12,28 @@ import gti310.tp3.models.MatriceGraphe;
  */
 public class DjikstraAlgorithm {
 
-	private static int[][] initSource(int [][] graph, int originId, Queue q){
+	private static PriorityQueue<Integer> initSource(int [][] graph, int originId){
+		
+		PriorityQueue<Integer> q = new PriorityQueue<Integer>(graph.length);
+		
 		for(int i=0; i<graph.length; i++){
-			graph[i][0] = MatriceGraphe.INFINI;
-			graph[i][1] = 0;
+			if(i != originId){
+				graph[i][0] = MatriceGraphe.INFINI;
+				graph[i][1] = -1;	
+			}
 			q.add(i);
 		}
+		
 		graph[originId][0] = 0;
 		graph[originId][1] = -1;
-		return graph;
+		
+		return q;
 	}
 	
 	public static int[][] djikstra(int[][] originalGraph, int outGraph[][], int originId){
 		
-		PriorityQueue<Integer> q = new PriorityQueue<Integer>(outGraph.length);
-		outGraph = initSource(outGraph, originId, q);
+		
+		PriorityQueue<Integer> q = initSource(outGraph, originId);
 
 		while((q.peek()) != null){
 			Integer vertex = q.poll();
