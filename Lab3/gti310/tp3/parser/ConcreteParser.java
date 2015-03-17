@@ -13,15 +13,16 @@ import gti310.tp3.models.Zone;
 public class ConcreteParser implements Parser<Zone> {
 
 	@Override
-	public Zone parse(String filename) throws FileNotFoundException {
+	public Zone parse(String filename){
 		Zone zone = null;
 		ArrayList<Chemin> chemins = null;
 		ArrayList<Ville> villes = null;
 		Ville villeDepart;
 		
-		BufferedReader br = new BufferedReader(new FileReader(filename));
+		BufferedReader br;
 		
 		try {
+			br = new BufferedReader(new FileReader(filename));
 			long nbVilles = Long.parseLong(br.readLine());
 			
 			//Créer la Liste de villes et la peupler
@@ -60,6 +61,11 @@ public class ConcreteParser implements Parser<Zone> {
 			
 			zone = new Zone(villes, chemins, villeDepart);
 
+			
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

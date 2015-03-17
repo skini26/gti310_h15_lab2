@@ -30,7 +30,7 @@ public interface Parser<E> {
 	 * @param filename The complete path to the file to parse.
 	 * @return An object produced from the input file, or null if something
 	 * 		   went wrong.
-	 * @throws FileNotFoundException 
+	 * 
 	 */
-	E parse(String filename) throws FileNotFoundException;
+	E parse(String filename);
 }

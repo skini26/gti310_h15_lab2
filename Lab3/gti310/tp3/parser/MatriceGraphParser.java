@@ -12,12 +12,13 @@ import gti310.tp3.models.Ville;
 public class MatriceGraphParser implements Parser<MatriceGraphe> {
 
 	@Override
-	public MatriceGraphe parse(String filename) throws FileNotFoundException {
+	public MatriceGraphe parse(String filename) {
 		
-		BufferedReader br = new BufferedReader(new FileReader(filename));
+		BufferedReader br;
 		MatriceGraphe zone = null;
 		
 		try {
+			br = new BufferedReader(new FileReader(filename));
 			String nbVillesString = br.readLine();
 			String villeDepartString = br.readLine();
 			int nbVilles = 0;
@@ -59,10 +60,15 @@ public class MatriceGraphParser implements Parser<MatriceGraphe> {
 					}
 				}
 			}
-
-		} catch (IOException e) {
+		}catch (FileNotFoundException e1) {
+			System.err.println("FileNotFoundException");
 			return null;
 		}
+		 catch (IOException e) {
+			 System.err.println("IOException");
+			 return null;
+		}
+		
 		
 		return zone;
 	

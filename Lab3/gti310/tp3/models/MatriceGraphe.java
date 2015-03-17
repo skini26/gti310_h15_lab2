@@ -7,14 +7,14 @@ package gti310.tp3.models;
  */
 public class MatriceGraphe {
 
-	public final static int INFINI = -2; 
+	public final static int INFINI = (int) Double.POSITIVE_INFINITY; 
 	
 	private int origine;
 	private int graphe[][];
 	
 	public MatriceGraphe(int nbDeVilles, int villeOrigine){
 		this.origine = villeOrigine;
-		this.graphe = new int[nbDeVilles][nbDeVilles];
+		this.graphe = new int[nbDeVilles+1][nbDeVilles+1];
 	}
 
 	public int[][] getGraphe(){
