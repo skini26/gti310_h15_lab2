@@ -19,17 +19,20 @@ public class ConcreteParser implements Parser<MatriceGraphe> {
 		
 		try {
 			br = new BufferedReader(new FileReader(filename));
+			
 			String nbVillesString = br.readLine();
 			String villeDepartString = br.readLine();
 			int nbVilles = 0;
 			int villeDepart = 0;
 			
+			//Si les donnees de depart sont presentes
 			if(villeDepartString.trim().isEmpty() == false || nbVillesString.trim().isEmpty() == false){
 				try{
 					villeDepart = Integer.parseInt(villeDepartString);
 					nbVilles = Integer.parseInt(nbVillesString);
 					
 					//Debug
+					System.out.println("========== INPUT ===========");
 					System.out.println("Ville de depart : "+villeDepart);
 					System.out.println("Nombre de villes : "+nbVilles);
 					//Debug
@@ -38,12 +41,19 @@ public class ConcreteParser implements Parser<MatriceGraphe> {
 					return null;
 				}
 			}
+			//Sinon retourner null, fichier invalide
+			else{
+				return null;
+			}
 			
+			//Instancier notre objet representant le graphe avec le noeud source
 			zone = new MatriceGraphe(nbVilles, villeDepart);
 		
 			String chemin = null;
+			//Lire tous les chemins et les stocker dans le graphe
 			while((chemin = br.readLine()) != null){
 				String[] donnees = chemin.split("\\t");
+				//Si toutes les donnees sont presentes
 				if(donnees.length == 3){
 					int depart = Integer.parseInt(donnees[0]);
 					int arrivee= Integer.parseInt(donnees[1]);
@@ -51,12 +61,17 @@ public class ConcreteParser implements Parser<MatriceGraphe> {
 					zone.getGraphe()[depart-1][arrivee-1] = distance;
 					
 					//Debug
-					//System.out.println("Depart="+depart+" Dest="+arrivee+" Dist="+distance);
+					System.out.println("Depart="+depart+" Dest="+arrivee+" Dist="+distance);
 				}
+				//EOF
 				else if(donnees.length == 1){
 					if("$".equals(donnees[0])){
 						break;
 					}
+				}
+				//Sinon retourner null, fichier invalide
+				else{
+					return null;
 				}
 			}
 			
@@ -68,6 +83,8 @@ public class ConcreteParser implements Parser<MatriceGraphe> {
 					}
 				}
 			}
+			
+			
 		}catch (FileNotFoundException e1) {
 			System.err.println("FileNotFoundException");
 			return null;
@@ -77,21 +94,7 @@ public class ConcreteParser implements Parser<MatriceGraphe> {
 			 return null;
 		}
 		
-		
-		//DEBUG
-		for (int i = 0; i < zone.getGraphe().length; i++) {
-			for (int j = 0; j < zone.getGraphe().length; j++) {
-				int depart = i+1;
-				int dest = j+1;
-				int dist = zone.getGraphe()[i][j];
-				System.out.println("Depart="+depart+" Dest="+dest+" Dist="+dist);
-				
-			}
-		}
-		//DEBUG
-		
 		return zone;
-	
 	}
 
 }

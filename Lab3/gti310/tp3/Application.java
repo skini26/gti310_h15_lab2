@@ -1,8 +1,5 @@
 package gti310.tp3;
 
-import java.io.FileNotFoundException;
-
-import javax.swing.JFileChooser;
 
 import gti310.tp3.models.Chemins;
 import gti310.tp3.models.MatriceGraphe;
@@ -33,19 +30,24 @@ public class Application {
 	public static void main(String args[]) {
 		System.out.println("Unreal Networks Solver !");
 		
-		System.out.println(System.getProperty("user.dir"));
+		//System.out.println(System.getProperty("user.dir"));
 		
+		//Creer le parser qui decodera le fichier texte
 		Parser<MatriceGraphe> parser = new ConcreteParser();
-		MatriceGraphe graphe = null;
-		
-		graphe = parser.parse(args[0]);
+		//Parser le fichier texte pour obtenir un graphe en matrice
+		MatriceGraphe graphe = parser.parse(args[0]);
+		//Si le fichier n'est pas conforme, quitter le programme
 		if(graphe == null){
 			System.err.println("invalid file");
 			System.exit(-1);
 		}
-
+		//Creer le solver qui resoudra le probleme
 		Solver<MatriceGraphe,Chemins> solver = new ConcreteSolver();
+		//Executer le solver afin d'obtenir les meilleures chemins
+		//dans le graphe grace 'a l'algorithme de Dijkstra
 		Chemins chemins = solver.solve(graphe);
+		
+		//Ecrire le fichier de sortie
 		Writer<Chemins> writer = new ConcreteWriter();
 		writer.write(args[1], chemins);
 		

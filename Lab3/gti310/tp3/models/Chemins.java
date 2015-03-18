@@ -1,5 +1,11 @@
 package gti310.tp3.models;
 
+/**
+ * Classe representant les meilleures chemins dans un tableau
+ * par rapport 'a un point d'origine
+ * @author Yanis
+ *
+ */
 public class Chemins {
 
 	private int origine;

@@ -2,6 +2,7 @@ package gti310.tp3.models;
 
 /**
  * Graphe implemente avec une matrice
+ * avec le point source
  * @author Yanis
  *
  */
@@ -27,6 +28,7 @@ public class MatriceGraphe {
 	
 	//Pas besoin de mutateurs, le graph etant un tableau de primitive,
 	//il est passe par reference et non pas par copie de valeur
+	//il est donc modifiable de l'exterieur
 	
 	
 }

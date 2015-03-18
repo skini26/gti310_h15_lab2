@@ -14,10 +14,10 @@ public class ConcreteWriter implements Writer<Chemins> {
 	public void write(String filename, Chemins output) {
 	
 		File file = new File(filename);
+		
 		try {
 			BufferedWriter bf = new BufferedWriter(new FileWriter(file));
 				
-			
 			int origine = (output.getOrigine()+1);
 			int[][] chemins = output.getChemins();
 			
@@ -36,7 +36,7 @@ public class ConcreteWriter implements Writer<Chemins> {
 			for(int i=0; i< chemins.length; i++){
 				int dest = i+1;
 				int dist = chemins[i][0];
-				int parent = chemins[i][1];
+				int parent = (chemins[i][1] == -1) ? -1:chemins[i][1]+1;
 				
 				//DEBUG
 				System.out.println("Dest="+dest+" Parent="+parent+" Dist="+dist);

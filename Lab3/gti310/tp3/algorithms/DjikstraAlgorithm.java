@@ -1,13 +1,12 @@
 package gti310.tp3.algorithms;
 
 import java.util.ArrayList;
-import java.util.PriorityQueue;
-import java.util.Queue;
 
 import gti310.tp3.models.MatriceGraphe;
 
 /**
- * 
+ * Classe utilitaire permetant d'executer l'algorithme de Dijkstra
+ * sur un Graphe
  * @author Yanis
  * Base sur : https://www.swila.be/files/labo-ppm/PPM0708.pdf
  */
@@ -37,39 +36,29 @@ public class DjikstraAlgorithm {
 	
 	/**
 	 * Algorithme de Dijkstra qui permettra de trouver les meilleurs
-	 * chemins 'a partir d'un point de depart
+	 * chemins 'a partir d'un point de depart dans un graphe
 	 * @param originalGraph : graphe representant tous les chemins (matrice de poids)
 	 * @param originId : point de depart
-	 * @return
+	 * @return tableau de chemins optimaux
 	 */
 	public static int[][] computePaths(int[][] originalGraph, int originId){
 		
-		// [i][0] Distance , [i][1] Parent ou i = numero du noeud
+		// [i][0] Distance , [i][1] Parent o'u i = numero du noeud
 		int[][] outGraph = new int[originalGraph.length][2];
-		
+		//Noeuds 'a visiter
 		ArrayList<Integer> vertexQueue = init(outGraph, originId);
 		
+		//Tant qu'il reste des noeuds 'a visiter
 		while(vertexQueue.isEmpty() == false){
 			
 			Integer nearestVertex = findShortestPath(vertexQueue, outGraph);
 			vertexQueue.remove(nearestVertex);
-			
-			/*
-			for(int i=0;i<vertexQueue.size();i++){
-				if(vertexQueue.get(i) == nearestVertex){
-					vertexQueue.remove(i);
-				}
-			}
-			*/
-			
-			System.out.println("Nearest vertex = "+(nearestVertex+1));
-			
+
 			for (int i = 0; i < originalGraph.length; i++) {
 				
 				int distance = originalGraph[nearestVertex][i];
 				
 				if(distance != MatriceGraphe.INFINI){
-					System.out.println("distance entre "+(nearestVertex+1)+" et "+(i+1)+" = "+distance);
 					relax(nearestVertex, i, originalGraph, outGraph);
 				}
 			}
@@ -82,7 +71,7 @@ public class DjikstraAlgorithm {
 	 * Trouve la ville la plus proche de la source
 	 * @param vertexQueue
 	 * @param outGraph
-	 * @return
+	 * @return le noeud le plus proche
 	 */
 	private static Integer findShortestPath(ArrayList<Integer> vertexQueue, int[][] outGraph) {
 		
@@ -105,19 +94,19 @@ public class DjikstraAlgorithm {
 	}
 	
 	/**
-	* Assigne les valeurs des meilleurs chemins dans le graphe de sortie
+	* Assigne les valeurs des meilleurs chemins dans le tableau de sortie
 	* @param u Noeud avec plus petite valeur
-	* @param v index dans le graphe
+	* @param v index dans le graphe original
 	* @param originalGraph
-	* @param graphe
+	* @param outGraph tableau de sortie
 	*/
 	private static void relax(int u, int v, int[][] originalGraph, int[][] outGraph){
 		
-		int dist = outGraph[u][0] + originalGraph[u][v];
-		if(dist < outGraph[v][0]){
-			outGraph[v][0] = dist;
+		int distance = outGraph[u][0] + originalGraph[u][v];
+		
+		if(distance < outGraph[v][0]){
+			outGraph[v][0] = distance;
 			outGraph[v][1] = u;
-			System.out.println("Nouvelle distance plus petite = "+dist);
 		}
 	}
 	
