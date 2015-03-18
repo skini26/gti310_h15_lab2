@@ -12,46 +12,44 @@ public class ConcreteWriter implements Writer<Chemins> {
 
 	@Override
 	public void write(String filename, Chemins output) {
-		
-		//DEBUG
-		int origine = output.getOrigine();
-		int[][] chemins = output.getChemins();
-		System.out.println("============= OUTPUT ==============");
-		System.out.println("Source = "+origine);
-		
-		for (int i = 0; i < chemins.length; i++) {
-			
-				int dest = i+1;
-				int dist = chemins[i][0];
-				int parent = chemins[i][1];
-				System.out.println("Dest="+dest+" Parent="+parent+" Dist="+dist);
-			
-		}
-		//DEBUG
-		
+	
 		File file = new File(filename);
 		try {
 			BufferedWriter bf = new BufferedWriter(new FileWriter(file));
 				
-			//Ecrire la source
-			for(int i=0;i<chemins.length;i++){
-					if(chemins[i][1] == -1){
-						bf.write((i+1) + "\n");
-					}
-			}
 			
-			//Permet d'écrire toutes les données du graphe
-			for(int i=0;i<chemins.length;i++){
-									
-					bf.write(chemins[i][1] + "\t" + chemins[i][0]);
-					bf.write("\n");
+			int origine = (output.getOrigine()+1);
+			int[][] chemins = output.getChemins();
+			
+			System.out.println("============= OUTPUT ==============");
+			
+	
+			//Ecrire la source
+			bf.write(String.valueOf(origine));
+			bf.write(System.lineSeparator());
+			
+			//DEBUG
+			System.out.println("Source = "+origine);
+			//DEBUG
+
+			//Ecrire tous les chemins
+			for(int i=0; i< chemins.length; i++){
+				int dest = i+1;
+				int dist = chemins[i][0];
+				int parent = chemins[i][1];
+				
+				//DEBUG
+				System.out.println("Dest="+dest+" Parent="+parent+" Dist="+dist);
+				//DEBUG
+				
+				bf.write(dest + "\t" + parent + "\t" + dist);
+				bf.write(System.lineSeparator());
 			}
 			
 			
 			bf.close();
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

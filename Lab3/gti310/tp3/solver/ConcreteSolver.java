@@ -11,13 +11,14 @@ import gti310.tp3.models.MatriceGraphe;
  * @author Yanis
  * 
  */
-public class MatriceGrapheSolver implements Solver<MatriceGraphe, Chemins> {
+public class ConcreteSolver implements Solver<MatriceGraphe, Chemins> {
 
 	
 	@Override
 	public Chemins solve(MatriceGraphe input) {
 		
-		int originId = input.getOrigine();
+		//-1 parceque l'index de la matrice commence 'a 0
+		int originId = input.getOrigine() - 1;
 		int[][] meilleuresChemins = DjikstraAlgorithm.computePaths(input.getGraphe(), originId);
 		Chemins chemins = new Chemins(originId, meilleuresChemins);
 		

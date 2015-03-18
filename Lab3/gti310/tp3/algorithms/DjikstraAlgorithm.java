@@ -1,5 +1,6 @@
 package gti310.tp3.algorithms;
 
+import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -18,9 +19,9 @@ public class DjikstraAlgorithm {
 	 * @param originId
 	 * @return le queue contenant toutes les villes
 	 */
-	private static PriorityQueue<Integer> init(int [][] graph, int originId){
+	private static ArrayList<Integer> init(int [][] graph, int originId){
 		
-		PriorityQueue<Integer> q = new PriorityQueue<Integer>(graph.length);
+		ArrayList<Integer> q = new ArrayList<Integer>(graph.length);
 		
 		for(int i=0; i<graph.length; i++){
 			graph[i][0] = MatriceGraphe.INFINI; //Distance inconnue de la source 'a i
@@ -46,13 +47,22 @@ public class DjikstraAlgorithm {
 		// [i][0] Distance , [i][1] Parent ou i = numero du noeud
 		int[][] outGraph = new int[originalGraph.length][2];
 		
-		PriorityQueue<Integer> vertexQueue = init(outGraph, originId);
+		ArrayList<Integer> vertexQueue = init(outGraph, originId);
 		
 		while(vertexQueue.isEmpty() == false){
 			
 			Integer nearestVertex = findShortestPath(vertexQueue, outGraph);
 			vertexQueue.remove(nearestVertex);
-			System.out.println("Nearest vertex = "+nearestVertex);
+			
+			/*
+			for(int i=0;i<vertexQueue.size();i++){
+				if(vertexQueue.get(i) == nearestVertex){
+					vertexQueue.remove(i);
+				}
+			}
+			*/
+			
+			System.out.println("Nearest vertex = "+(nearestVertex+1));
 			
 			for (int i = 0; i < originalGraph.length; i++) {
 				
@@ -74,10 +84,10 @@ public class DjikstraAlgorithm {
 	 * @param outGraph
 	 * @return
 	 */
-	private static Integer findShortestPath(PriorityQueue<Integer> vertexQueue, int[][] outGraph) {
+	private static Integer findShortestPath(ArrayList<Integer> vertexQueue, int[][] outGraph) {
 		
 		int shortestDistance = MatriceGraphe.INFINI;
-		int shortestPath = 0;
+		int shortestPathVertex = 0;
 		
 		//Visiter tous les voisins
 		for(Integer vertex : vertexQueue) {
@@ -85,20 +95,18 @@ public class DjikstraAlgorithm {
 			int newShortestDistance = outGraph[vertex][0];
 	
 			if(newShortestDistance < shortestDistance){
-			
 				shortestDistance = newShortestDistance;
-				shortestPath = vertex;	
-			
+				shortestPathVertex = vertex;		
 			}
 
 		}
 
-		return shortestPath;
+		return shortestPathVertex;
 	}
 	
 	/**
 	* Assigne les valeurs des meilleurs chemins dans le graphe de sortie
-	* @param u Sommet avec plus petite valeur
+	* @param u Noeud avec plus petite valeur
 	* @param v index dans le graphe
 	* @param originalGraph
 	* @param graphe

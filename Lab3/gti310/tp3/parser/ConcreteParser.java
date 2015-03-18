@@ -4,53 +4,54 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 
-import gti310.tp3.models.Chemin;
-import gti310.tp3.models.Ville;
-import gti310.tp3.models.Zone;
 
-public class ConcreteParser implements Parser<Zone> {
+import gti310.tp3.models.MatriceGraphe;
+
+
+public class ConcreteParser implements Parser<MatriceGraphe> {
 
 	@Override
-	public Zone parse(String filename){
-		Zone zone = null;
-		ArrayList<Chemin> chemins = null;
-		ArrayList<Ville> villes = null;
-		Ville villeDepart;
+	public MatriceGraphe parse(String filename) {
 		
 		BufferedReader br;
+		MatriceGraphe zone = null;
 		
 		try {
 			br = new BufferedReader(new FileReader(filename));
-			long nbVilles = Long.parseLong(br.readLine());
+			String nbVillesString = br.readLine();
+			String villeDepartString = br.readLine();
+			int nbVilles = 0;
+			int villeDepart = 0;
 			
-			//Créer la Liste de villes et la peupler
-			villes = new ArrayList<Ville>((int) nbVilles);
-			for(long i=0; i<nbVilles; i++){
-				villes.add(new Ville(i, null));
+			if(villeDepartString.trim().isEmpty() == false || nbVillesString.trim().isEmpty() == false){
+				try{
+					villeDepart = Integer.parseInt(villeDepartString);
+					nbVilles = Integer.parseInt(nbVillesString);
+					
+					//Debug
+					System.out.println("Ville de depart : "+villeDepart);
+					System.out.println("Nombre de villes : "+nbVilles);
+					//Debug
+				}
+				catch(NumberFormatException e){
+					return null;
+				}
 			}
 			
-			long villeDepartId = 0;
-			//Si pas de ville de départ spécifiée, prendre la premiere
-			try{
-				villeDepartId = Long.parseLong(br.readLine());
-			}
-			catch(NumberFormatException e){
-				villeDepartId = 1;
-			}
-			
-			villeDepart = new Ville(villeDepartId, null);
+			zone = new MatriceGraphe(nbVilles, villeDepart);
 		
-			String ligne;
-			while((ligne = br.readLine()) != null){
-				String[] donnees = ligne.split("\\t");
+			String chemin = null;
+			while((chemin = br.readLine()) != null){
+				String[] donnees = chemin.split("\\t");
 				if(donnees.length == 3){
-					Ville depart = new Ville(Long.parseLong(donnees[0]), null);
-					Ville arrivee= new Ville(Long.parseLong(donnees[1]), null);
+					int depart = Integer.parseInt(donnees[0]);
+					int arrivee= Integer.parseInt(donnees[1]);
 					int distance = Integer.parseInt(donnees[2]);
-					Chemin chemin = new Chemin(depart, arrivee, distance);
-					chemins.add(chemin);
+					zone.getGraphe()[depart-1][arrivee-1] = distance;
+					
+					//Debug
+					//System.out.println("Depart="+depart+" Dest="+arrivee+" Dist="+distance);
 				}
 				else if(donnees.length == 1){
 					if("$".equals(donnees[0])){
@@ -59,19 +60,38 @@ public class ConcreteParser implements Parser<Zone> {
 				}
 			}
 			
-			zone = new Zone(villes, chemins, villeDepart);
-
-			
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		
-		} catch (IOException e) {
-			e.printStackTrace();
+			//Mettre valeur infini quand aucun chemin n'est disponible
+			for(int i=0; i<zone.getGraphe().length; i++){
+				for(int j=0; j<zone.getGraphe().length; j++){
+					if(zone.getGraphe()[i][j] == 0 && (i!=j)){
+						zone.getGraphe()[i][j] = MatriceGraphe.INFINI;
+					}
+				}
+			}
+		}catch (FileNotFoundException e1) {
+			System.err.println("FileNotFoundException");
+			return null;
 		}
-
+		 catch (IOException e) {
+			 System.err.println("IOException");
+			 return null;
+		}
+		
+		
+		//DEBUG
+		for (int i = 0; i < zone.getGraphe().length; i++) {
+			for (int j = 0; j < zone.getGraphe().length; j++) {
+				int depart = i+1;
+				int dest = j+1;
+				int dist = zone.getGraphe()[i][j];
+				System.out.println("Depart="+depart+" Dest="+dest+" Dist="+dist);
+				
+			}
+		}
+		//DEBUG
+		
 		return zone;
+	
 	}
-
 
 }
