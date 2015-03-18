@@ -23,10 +23,8 @@ public class DjikstraAlgorithm {
 		PriorityQueue<Integer> q = new PriorityQueue<Integer>(graph.length);
 		
 		for(int i=0; i<graph.length; i++){
-			if(i != originId){
-				graph[i][0] = MatriceGraphe.INFINI; //Distance inconnue de la source 'a i
-				graph[i][1] = -1;	//Noeud precedent dans le chemin optimal indefini
-			}
+			graph[i][0] = MatriceGraphe.INFINI; //Distance inconnue de la source 'a i
+			graph[i][1] = -1;	//Noeud precedent dans le chemin optimal indefini
 			q.add(i); //Ajouter tous les noeuds 'a la queue
 		}
 		
@@ -54,9 +52,12 @@ public class DjikstraAlgorithm {
 			Integer nearestVertex = findShortestPath(vertexQueue, outGraph);
 			vertexQueue.remove(nearestVertex);
 			//Integer vertex = vertexQueue.poll();
+			System.out.println("Nearest vertex = "+nearestVertex);
 			
 			for (int i = 0; i < originalGraph.length; i++) {
+				
 				int distance = originalGraph[nearestVertex][i];
+				
 				if(distance != -1 && distance != MatriceGraphe.INFINI){
 					relax(nearestVertex, i, originalGraph, outGraph);
 				}
@@ -102,9 +103,11 @@ public class DjikstraAlgorithm {
 	* @param graphe
 	*/
 	private static void relax(int u, int v, int[][] originalGraph, int[][] outGraph){
-		if(outGraph[u][0] + originalGraph[u][v] < outGraph[v][0]){
-			outGraph[v][0] = outGraph[u][0] + originalGraph[u][v];
-			outGraph[v][1] = u+1;
+		
+		int dist = outGraph[u][0] + originalGraph[u][v];
+		if(dist < outGraph[v][0]){
+			outGraph[v][0] = dist;
+			outGraph[v][1] = u;
 		}
 	}
 	

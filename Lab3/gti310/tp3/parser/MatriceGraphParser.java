@@ -28,6 +28,11 @@ public class MatriceGraphParser implements Parser<MatriceGraphe> {
 				try{
 					villeDepart = Integer.parseInt(villeDepartString);
 					nbVilles = Integer.parseInt(nbVillesString);
+					
+					//Debug
+					System.out.println("Ville de depart : "+villeDepart);
+					System.out.println("Nombre de villes : "+nbVilles);
+					//Debug
 				}
 				catch(NumberFormatException e){
 					return null;
@@ -44,6 +49,9 @@ public class MatriceGraphParser implements Parser<MatriceGraphe> {
 					int arrivee= Integer.parseInt(donnees[1]);
 					int distance = Integer.parseInt(donnees[2]);
 					zone.getGraphe()[depart][arrivee] = distance;
+					
+					//Debug
+					System.out.println("Depart="+depart+" Dest="+arrivee+" Dist="+distance);
 				}
 				else if(donnees.length == 1){
 					if("$".equals(donnees[0])){

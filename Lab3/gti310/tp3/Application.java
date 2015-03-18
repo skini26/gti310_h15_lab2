@@ -43,7 +43,7 @@ public class Application {
 			System.err.println("invalid file");
 			System.exit(-1);
 		}
-		
+
 		Solver<MatriceGraphe,Chemins> solver = new MatriceGrapheSolver();
 		Chemins chemins = solver.solve(graphe);
 		Writer<Chemins> writer = new ConcreteWriter();
