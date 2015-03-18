@@ -43,6 +43,7 @@ public class DjikstraAlgorithm {
 	 */
 	public static int[][] computePaths(int[][] originalGraph, int originId){
 		
+		// [i][0] Distance , [i][1] Parent ou i = numero du noeud
 		int[][] outGraph = new int[originalGraph.length][2];
 		
 		PriorityQueue<Integer> vertexQueue = init(outGraph, originId);
@@ -51,14 +52,14 @@ public class DjikstraAlgorithm {
 			
 			Integer nearestVertex = findShortestPath(vertexQueue, outGraph);
 			vertexQueue.remove(nearestVertex);
-			//Integer vertex = vertexQueue.poll();
 			System.out.println("Nearest vertex = "+nearestVertex);
 			
 			for (int i = 0; i < originalGraph.length; i++) {
 				
 				int distance = originalGraph[nearestVertex][i];
 				
-				if(distance != -1 && distance != MatriceGraphe.INFINI){
+				if(distance != MatriceGraphe.INFINI){
+					System.out.println("distance entre "+(nearestVertex+1)+" et "+(i+1)+" = "+distance);
 					relax(nearestVertex, i, originalGraph, outGraph);
 				}
 			}
@@ -108,6 +109,7 @@ public class DjikstraAlgorithm {
 		if(dist < outGraph[v][0]){
 			outGraph[v][0] = dist;
 			outGraph[v][1] = u;
+			System.out.println("Nouvelle distance plus petite = "+dist);
 		}
 	}
 	

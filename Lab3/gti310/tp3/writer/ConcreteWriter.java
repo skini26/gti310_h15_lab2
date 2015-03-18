@@ -21,7 +21,7 @@ public class ConcreteWriter implements Writer<Chemins> {
 		
 		for (int i = 0; i < chemins.length; i++) {
 			
-				int dest = i;
+				int dest = i+1;
 				int dist = chemins[i][0];
 				int parent = chemins[i][1];
 				System.out.println("Dest="+dest+" Parent="+parent+" Dist="+dist);

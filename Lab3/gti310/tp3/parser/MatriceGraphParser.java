@@ -48,10 +48,10 @@ public class MatriceGraphParser implements Parser<MatriceGraphe> {
 					int depart = Integer.parseInt(donnees[0]);
 					int arrivee= Integer.parseInt(donnees[1]);
 					int distance = Integer.parseInt(donnees[2]);
-					zone.getGraphe()[depart][arrivee] = distance;
+					zone.getGraphe()[depart-1][arrivee-1] = distance;
 					
 					//Debug
-					System.out.println("Depart="+depart+" Dest="+arrivee+" Dist="+distance);
+					//System.out.println("Depart="+depart+" Dest="+arrivee+" Dist="+distance);
 				}
 				else if(donnees.length == 1){
 					if("$".equals(donnees[0])){
@@ -61,9 +61,9 @@ public class MatriceGraphParser implements Parser<MatriceGraphe> {
 			}
 			
 			//Mettre valeur infini quand aucun chemin n'est disponible
-			for(int i=0; i<nbVilles; i++){
-				for(int j=0; i<nbVilles; i++){
-					if(zone.getGraphe()[i][j] == 0 && i!=j){
+			for(int i=0; i<zone.getGraphe().length; i++){
+				for(int j=0; j<zone.getGraphe().length; j++){
+					if(zone.getGraphe()[i][j] == 0 && (i!=j)){
 						zone.getGraphe()[i][j] = MatriceGraphe.INFINI;
 					}
 				}
@@ -77,6 +77,18 @@ public class MatriceGraphParser implements Parser<MatriceGraphe> {
 			 return null;
 		}
 		
+		
+		//DEBUG
+		for (int i = 0; i < zone.getGraphe().length; i++) {
+			for (int j = 0; j < zone.getGraphe().length; j++) {
+				int depart = i+1;
+				int dest = j+1;
+				int dist = zone.getGraphe()[i][j];
+				System.out.println("Depart="+depart+" Dest="+dest+" Dist="+dist);
+				
+			}
+		}
+		//DEBUG
 		
 		return zone;
 	

@@ -14,7 +14,7 @@ public class MatriceGraphe {
 	
 	public MatriceGraphe(int nbDeVilles, int villeOrigine){
 		this.origine = villeOrigine;
-		this.graphe = new int[nbDeVilles+1][nbDeVilles+1];
+		this.graphe = new int[nbDeVilles][nbDeVilles];
 	}
 
 	public int[][] getGraphe(){
