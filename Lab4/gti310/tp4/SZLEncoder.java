@@ -46,6 +46,9 @@ public class SZLEncoder {
 		
 		//Convertir RGB 'a YCBR
 		int[][][] ppmImageYCBR = ImageColorFormatConverter.convertRGBtoYCbCr(ppmImageRGB);
+		int height = ppmImageYCBR[0][0][0];
+		int width = ppmImageYCBR[1][0][0];
+		
 		
 		//Decoupage en blocs Main.BLOCK_SIZE * Main.BLOCK_SIZE
 		List<int[][][]> imageBlocksList = divideIntoBlocks(ppmImageYCBR);
@@ -83,13 +86,28 @@ public class SZLEncoder {
 		}
 		
 		//Zigzag 1) DPCM 2) RLC
+		List<int[]> yZigZagBlocks = new ArrayList<int[]>();
+		List<int[]> cbZigZagBlocks = new ArrayList<int[]>();
+		List<int[]> crZigZagBlocks = new ArrayList<int[]>();
 		
+		for(int[][] yQuantifiedBlock : yQuantifiedBlocks){
+			int[] zizagBlock = zigzag(yQuantifiedBlock);
+			yZigZagBlocks.add(zizagBlock);
+		}
+		for(int[][] cbQuantifiedBlock : cbQuantifiedBlocks){
+			int[] zizagBlock = zigzag(cbQuantifiedBlock);
+			cbZigZagBlocks.add(zizagBlock);
+		}
+		for(int[][] crQuantifiedBlock : crQuantifiedBlocks){
+			int[] zizagBlock = zigzag(crQuantifiedBlock);
+			crZigZagBlocks.add(zizagBlock);
+		}
 		
 		//Codage entropique
-		
+		Entropy.loadBitstream(Entropy.getBitstream());
 		
 		//Ecriture de l'image quasi-JPEG
-		
+		SZLReaderWriter.writeSZLFile(encodedFile, height, width, qualityFactor);
 		
 	}
 	
@@ -97,6 +115,7 @@ public class SZLEncoder {
 	 * Divide an image in many Main.BLOCK_SIZExMain.BLOCK_SIZE images
 	 * @param image
 	 * @return list of Main.BLOCK_SIZExMain.BLOCK_SIZE images
+	 * complexite : O(N^2)*O(8^2)
 	 */
 	private List<int[][][]> divideIntoBlocks(int[][][] image){
 		List<int[][][]> blocks = new ArrayList<int[][][]>();
@@ -124,6 +143,7 @@ public class SZLEncoder {
 	 * Applique la DCT sur un block et retourne le block transforme
 	 * @param block
 	 * @return block transforme
+	 * complexite : O(N^4)
 	 */
 	private double[][] applyDCT(int[][] block){
 	
@@ -164,9 +184,10 @@ public class SZLEncoder {
 	 * Quantifie un block
 	 * @param yDCTBlock
 	 * @param qualityFactor
-	 * @param isY
-	 * @analysis O(imageBlock.length * imageBlock.length)
+	 * @param layer
 	 * @return
+	 * 
+	 * complexite O(N ^2)
 	 */
 	public static int[][] quantify(double[][] yDCTBlock, int qualityFactor, int layer) {
 		
@@ -211,6 +232,47 @@ public class SZLEncoder {
 		else{
 			return 0;
 		}
+	}
+	
+	/**
+	 * Algorithme de zigzag sur des bloc 8x8
+	 * @param bloc
+	 * @return matrice zigzag
+	 * 
+	 * complexite : O(N)
+	 */
+	public static int[] zigzag(int[][] bloc){
+		
+		int size = (bloc.length)*(bloc.length);
+		int[] zizagMat = new int[size];
+        int x= 0;
+        int y= 0;
+           
+           for(int i=0; i<size; i++){
+        		zizagMat[i] = bloc[x][y];
+        		
+                if((x + y) % 2 == 0){   
+                    if(y < 8){
+                        y++;
+                    }else{
+                        x+= 2;
+                    }
+                    if(x > 1){
+                        x--;
+                    }
+                }
+                else{
+                    if(x < 8){
+                         x++;
+                    }else{
+                         y+= 2;
+                    }
+                    if(y > 1){
+                         y--;
+                    }
+                }
+            }
+		 return zizagMat;
 	}
 	
 }
